@@ -24,8 +24,8 @@ A player monoid definition is a table with the following:
   * ```combine(elem1, elem2)``` - An associative binary operation
   * ```fold({elems})``` - Equivalent to combining a whole list with ```combine```
   * ```identity``` - An identity element for ```combine```
-  * ```apply(value, player)``` - Apply the effect represented by ```value``` to
-  ```player```
+  * ```apply(value, player)``` - Apply the effect represented by ```value```
+  to ```player```
   * ```on_change(val1, val2, player)``` - Do something when the value on a
   player changes. (optional)
 
@@ -71,9 +71,9 @@ Monoid Methods
 argument ```id``` is supplied, that is used as the ID instead, and any existing
 change with that ID is removed.
 
-```monoid:del_change(player, id)``` - Removes the change with the given ID, if
+```monoid:del_change(id)``` - Removes the change with the given ID, if
 it exists.
 
 Monoid Properties
 -----------------
-```monoid.value()``` - The current combined value of the monoid.
+```monoid.value``` - The current combined value of the monoid.
