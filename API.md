@@ -42,10 +42,6 @@ key order. It should be equivalent to using ```combine``` to combine all the
 values together. For example, ```combine``` could multiply two speed multipliers
 together, and ```fold``` could multiply every value together.
 
-If you only define one of the two, the undefined one will be defined in terms of
-the one that is defined. However, it is better to define both for performance
-reasons.
-
 identity
 --------
 ```identity```, when combined with any other value, should result in the other
@@ -66,14 +62,15 @@ used to make changes to the player state. Returns a monoid.
 
 Monoid Methods
 --------------
-```monoid:add_change(player, value[, id])``` - Applies the change represented by
-```value``` to ```player```. Returns an ID for the change. If the optional
-argument ```id``` is supplied, that is used as the ID instead, and any existing
-change with that ID is removed.
+```monoid:add_change(player, value[, "id"])``` - Applies the change represented
+by ```value``` to ```player```. Returns an ID for the change. If the optional
+string argument ```"id"``` is supplied, that is used as the ID instead, and any
+existing change with that ID is removed. IDs are only guaranteed to be unique
+per-player. Conversely, you are allowed to make multiple changes with the same
+ID as long as they are all on different players.
 
-```monoid:del_change(id)``` - Removes the change with the given ID, if
-it exists.
+```monoid:del_change(player, id)``` - Removes the change with the given ID, from
+the given player, if it exists.
 
-Monoid Properties
------------------
-```monoid.value``` - The current combined value of the monoid.
+```monoid:value(player)``` - The current combined value of the monoid for the
+given player.
