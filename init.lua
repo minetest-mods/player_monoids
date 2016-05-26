@@ -4,10 +4,9 @@
 -- Any documentation here are internal details, please avoid using them in your
 -- mod.
 
-player_monoids = {}
+local modpath = minetest.get_modpath(minetest.get_current_modname())
 
--- Needed for removing players from monoid lists when they leave.
-local player_maps = {}
+player_monoids = {}
 
 local mon_meta = {}
 
@@ -22,13 +21,21 @@ mon_meta.__index = mon_meta
 local function monoid(def)
         local mon = {}
 
-        local player_map = {}
-        mon.players = player_map
-        table.insert(player_maps, player_map)
+	local p_map = {}
+        mon.player_map = p_map
 
         mon.next_id = 1
 
+	local v_cache = {}
+	mon.value_cache = v_cache
+
         setmetatable(mon, mon_methods)
+
+	minetest.register_on_leaveplayer(function(player)
+		local p_name = player:get_player_name()
+		p_map[p_name] = nil
+		v_cache[p_name] = nil
+	end)
 
         return mon
 end
@@ -55,7 +62,7 @@ function mon_meta:add_change(player, value)
 
         local old_total = self.value_cache[p_name]
         p_effects[actual_id] = value
-        local new_total = self.fold(p_effects)
+	local new_total = self.fold(p_effects)
         self.value_cache[p_name] = new_total
         
         self.apply(new_total, player)
