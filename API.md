@@ -74,3 +74,17 @@ the given player, if it exists.
 
 ```monoid:value(player)``` - The current combined value of the monoid for the
 given player.
+
+Caveats
+=======
+* If the global state managed by a monoid is modified by something other than
+the monoid, you will have the same problem as when two mods both independently
+try to modify global state without going through a monoid.
+ * This includes playereffects effects that affect global player state without
+going through a monoid.
+* You will also get problems if you use multiple monoids to manage the same
+global state.
+* The order that different effects get combined together is based on key order,
+which may not be predictable. So you should try to make your monoids commutative
+in addition to associative, or at least not care if the order of two changes
+is swapped.
