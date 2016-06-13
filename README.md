@@ -129,6 +129,66 @@ the resulting boost will still play nice with speed effects from other mods.
 You could even add another "nested monoid" just for speed maluses, that takes
 the worst speed drain and applies it as a multiplier.
 
+Standard Monoids
+================
+In the spirit of compatibility, this mod provides some canonical monoids for
+commonly used player state. They combine values in a way that should allow
+different mods to affect player state fairly. If you make another monoid handling
+the same state as one of these, you will break compatibility with any mods using
+the standard monoid.
+
+Physics Overrides
+-----------------
+These monoids set the multiplier of the override they are named after. All three
+take non-negative numbers as values and combine them with multiplication. They
+are:
+ * ```player_monoids.speed```
+ * ```player_monoids.jump```
+ * ```player_monoids.gravity```
+
+Privileges
+----------
+These monoids set privileges that affect the player's ordinary gameplay. They
+take booleans as input and combine them with logical or. They are:
+ * ```player_monoids.fly```
+ * ```player_monoids.noclip```
+
+Other
+-----
+ * ```player_monoids.collisionbox``` - Sets the player's collisionbox. Values are
+ 3D multiplier vectors, which are combined with component-wise multiplication.
+ * ```player_monoids.visual_size``` - Sets the player's collisionbox. Values are
+ 2D multiplier vectors (x and y), which are combined with component-wise
+ multiplication.
+
+Use with playereffects
+======================
+Player Monoids does not provide anything special for persistent effects with
+limited lifetime. By using monoids with Wuzzy's playereffects, you can easily
+create temporary effects that stack with each other. As an example, an effect
+that gives the player 2x speed:
+```
+local speed = player_monoids.speed
+
+local function apply(player)
+  speed:add_change(player, 2, "mymod:2x_speed")
+end
+
+local function cancel(player)
+  speed:del_change(player, "mymod:2x_speed")
+end
+
+local groups = { "mymod:2x_speed" }
+
+playereffects.register_effect_type("mymod:2x_speed", "2x Speed", groups, apply, cancel)
+```
+
+Note that this effect does NOT use the "speed" effect group. As long as other
+speed effects use the speed monoid, we do not want them to be cancelled, since
+the goal is to combine the effects together. It does use a singleton group to
+prevent multiple instances of the same effect. I think that playereffects require
+effects to belong to at least one group, but I am not sure.
+
 Caveats
 =======
 * If the global state managed by a monoid is modified by something other than
