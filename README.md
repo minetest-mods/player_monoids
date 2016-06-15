@@ -104,12 +104,12 @@ the strongest boost. Most of it could be done the same way:
 -- My speed boosts monoid takes speed multipliers (numbers) that are at least 1.
 newmod.speed_boosts = player_monoids.make_monoid({
 	combine = function(speed1, speed2)
-		return speed1 * speed2
+		return math.max(speed1, speed2)
 	end,
 	fold = function(tab)
 		local res = 1
 	     	for _, speed in pairs(tab) do
-			res = res * speed
+			res = math.max(res, speed)
 	     	end
 	end,
 	identity = 1,
