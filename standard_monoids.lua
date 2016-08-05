@@ -34,7 +34,7 @@ local function v_mult_fold(identity)
 	end
 end
 
-local monoid = player_monoids.monoid
+local monoid = player_monoids.make_monoid
 
 -- Speed monoid. Effect values are speed multipliers. Must be nonnegative
 -- numbers.

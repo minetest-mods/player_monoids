@@ -59,7 +59,7 @@ local function monoid(def)
 	return mon
 end
 
-player_monoids.monoid = monoid
+player_monoids.make_monoid = monoid
 
 function mon_meta:add_change(player, value)
 	local p_name = player:get_player_name()
