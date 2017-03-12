@@ -65,7 +65,7 @@ function mon_meta:add_change(player, value, id)
 	local p_name = player:get_player_name()
 
 	local def = self.def
-        
+
 	local p_effects = self.player_map[p_name]
 	if p_effects == nil then
 		p_effects = {}
