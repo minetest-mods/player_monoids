@@ -5,7 +5,7 @@ local function mult(x, y) return x * y end
 local function mult_fold(elems)
 	local tot = 1
 
-	for k,v in pairs(elems) do
+	for _, v in pairs(elems) do
 		tot = tot * v
 	end
 
@@ -26,7 +26,7 @@ local function v_mult_fold(identity)
 	return function(elems)
 		local tot = identity
 
-		for k, v in pairs(elems) do
+		for _, v in pairs(elems) do
 			tot = v_mult(tot, v)
 		end
 
@@ -39,19 +39,12 @@ local monoid = player_monoids.make_monoid
 -- Speed monoid. Effect values are speed multipliers. Must be nonnegative
 -- numbers.
 player_monoids.speed = monoid({
-	combine = function(x, y) return x * y end,
-	fold = function(elems)
-		local res = 1
-		for k, v in pairs(elems) do
-			res = res * v
-		end
-
-		return res
-	end,
+	combine = mult,
+	fold = mult_fold,
 	identity = 1,
-	apply = function(mult, player)
+	apply = function(multiplier, player)
 		local ov = player:get_physics_override()
-		ov.speed = mult
+		ov.speed = multiplier
 		player:set_physics_override(ov)
 	end,
 })
@@ -60,19 +53,12 @@ player_monoids.speed = monoid({
 -- Jump monoid. Effect values are jump multipliers. Must be nonnegative
 -- numbers.
 player_monoids.jump = monoid({
-	combine = function(x, y) return x * y end,
-	fold = function(elems)
-		local res = 1
-		for k, v in pairs(elems) do
-			res = res * v
-		end
-
-		return res
-	end,
+	combine = mult,
+	fold = mult_fold,
 	identity = 1,
-	apply = function(mult, player)
+	apply = function(multiplier, player)
 		local ov = player:get_physics_override()
-		ov.jump = mult
+		ov.jump = multiplier
 		player:set_physics_override(ov)
 	end,
 })
@@ -80,19 +66,12 @@ player_monoids.jump = monoid({
 
 -- Gravity monoid. Effect values are gravity multipliers.
 player_monoids.gravity = monoid({
-	combine = function(x, y) return x * y end,
-	fold = function(elems)
-		local res = 1
-		for k, v in pairs(elems) do
-			res = res * v
-		end
-
-		return res
-	end,
+	combine = mult,
+	fold = mult_fold,
 	identity = 1,
-	apply = function(mult, player)
+	apply = function(multiplier, player)
 		local ov = player:get_physics_override()
-		ov.gravity = mult
+		ov.gravity = multiplier
 		player:set_physics_override(ov)
 	end,
 })
@@ -103,7 +82,7 @@ player_monoids.gravity = monoid({
 player_monoids.fly = monoid({
 	combine = function(p, q) return p or q end,
 	fold = function(elems)
-		for k, v in pairs(elems) do
+		for _, v in pairs(elems) do
 			if v then return true end
 		end
 
@@ -130,7 +109,7 @@ player_monoids.fly = monoid({
 player_monoids.noclip = monoid({
 	combine = function(p, q) return p or q end,
 	fold = function(elems)
-		for k, v in pairs(elems) do
+		for _, v in pairs(elems) do
 			if v then return true end
 		end
 

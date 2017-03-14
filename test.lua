@@ -11,7 +11,7 @@ local function test(player)
 	local p_name = player:get_player_name()
 
 	minetest.chat_send_player(p_name, "Your speed is: " .. speed:value(player))
-	
+
 	minetest.after(3, function()
 		speed:del_change(player, ch_id)
 		minetest.chat_send_player(p_name, "Your speed is: " .. speed:value(player))
