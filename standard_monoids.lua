@@ -142,7 +142,7 @@ player_monoids.collisionbox = monoid({
 		local v = vector.multiply(def_col_scale, multiplier)
 
 		player:set_properties({
-			collisionbox = { -v.x, -v.y, -v.z, v.z, v.y, v.z }
+			collisionbox = { -v.x, 0, -v.z, v.z, v.y, v.z }
 		})
 	end,
 })
