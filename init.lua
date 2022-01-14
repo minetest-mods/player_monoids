@@ -51,9 +51,12 @@ local function monoid(def)
 	setmetatable(mon, mon_meta)
 
 	minetest.register_on_leaveplayer(function(player)
-		local p_name = player:get_player_name()
-		p_map[p_name] = nil
-		v_cache[p_name] = nil
+		local p_name
+		if player then
+			p_name = player:get_player_name()
+			p_map[p_name] = nil
+			v_cache[p_name] = nil
+		end
 	end)
 
 	return mon

@@ -9,14 +9,16 @@ minetest.register_privilege("monoid_master", {
 
 local function test(player)
 	local ch_id = speed:add_change(player, 10)
-	local p_name = player:get_player_name()
-
-	minetest.chat_send_player(p_name, "Your speed is: " .. speed:value(player))
-
-	minetest.after(3, function()
-		speed:del_change(player, ch_id)
+	local p_name
+	if player then
+		p_name = player:get_player_name()
 		minetest.chat_send_player(p_name, "Your speed is: " .. speed:value(player))
-	end)
+
+		minetest.after(3, function()
+			speed:del_change(player, ch_id)
+			minetest.chat_send_player(p_name, "Your speed is: " .. speed:value(player))
+		end)
+	end
 end
 
 minetest.register_chatcommand("test_monoids", {
