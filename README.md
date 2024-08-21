@@ -43,6 +43,7 @@ mymod.speed_monoid = player_monoids.make_monoid({
 	     	for _, speed in pairs(tab) do
 			res = res * speed
 	     	end
+                return res
 	end,
 	identity = 1,
 	apply = function(speed, player)
@@ -111,6 +112,7 @@ newmod.speed_boosts = player_monoids.make_monoid({
 	     	for _, speed in pairs(tab) do
 			res = math.max(res, speed)
 	     	end
+                return res
 	end,
 	identity = 1,
 	apply = ???
