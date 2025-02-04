@@ -98,7 +98,6 @@ player_monoids.fly = monoid({
 		end
 
 		minetest.set_player_privs(p_name, privs)
-
 	end,
 })
 
@@ -124,7 +123,6 @@ player_monoids.noclip = monoid({
 		end
 
 		minetest.set_player_privs(p_name, privs)
-
 	end,
 })
 
