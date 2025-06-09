@@ -26,7 +26,7 @@ In def, you can optionally define:
 These hooks allow you to respond to monoid changes, branch creation, and branch deletion.
 ]]
 
-local function monoid(def)
+player_monoids.make_monoid = function(def)
 	local mon = {}
 
 	-- Clone the definition to avoid mutating the original
@@ -81,8 +81,6 @@ local function monoid(def)
 
 	return mon
 end
-
-player_monoids.make_monoid = monoid
 
 local function init_player_branches_if_missing(self, p_name)
 	if not self.player_map[p_name] then
@@ -188,9 +186,6 @@ function mon_meta:reset_branch(player, branch_name)
 	bdata.value = new_total
 
 	-- Update active branch
-	local active_branch = self.player_map[p_name].active_branch or "main"
-	local active_branch_data = self.player_map[p_name].branches[active_branch]
-
 	local active_branch = self.player_map[p_name].active_branch or "main"
 	local active_branch_data = self.player_map[p_name].branches[active_branch]
 	self.value_cache[p_name] = active_branch_data.value

@@ -53,7 +53,7 @@ local function test_speed_add_remove(player)
 		minetest.chat_send_player(p_name, "[Add/Remove] PASS: speed " .. before .. " -> " .. after_add)
 	end
 
-	minetest.after(2, function()
+	minetest.after(0.5, function()
 		local again = minetest.get_player_by_name(p_name)
 		if not again then return end
 		speed:del_change(again, ch_id)
@@ -73,31 +73,35 @@ local function test_branch_isolation(player)
 	local p_name = player:get_player_name()
 	reset_all_monoid_branches(player)
 
-	local init = speed:value(player)
+	local main_spd_0 = speed:value(player)
 	speed:checkout_branch(player, "arena")
 	speed:add_change(player, 0.5, "arena_slowdown", "arena")
 	local arena_spd = speed:value(player)
-	if arena_spd >= init then
+	if arena_spd >= main_spd_0 then
 		minetest.chat_send_player(p_name, "[BranchIsolation] FAIL: arena slowdown not effective.")
 	else
-		minetest.chat_send_player(p_name, "[BranchIsolation] PASS: arena slow " .. init .. " -> " .. arena_spd)
+		minetest.chat_send_player(p_name, "[BranchIsolation] PASS: arena slow " .. main_spd_0 .. " -> " .. arena_spd)
 	end
 
-	minetest.after(2, function()
+	local id_speed_boost
+	minetest.after(0.5, function()
 		speed:checkout_branch(player, "main")
-		speed:add_change(player, 2, "speed_boost")
-		local main_spd = speed:value(player)
-		if main_spd <= init then
+		id_speed_boost = speed:add_change(player, 2)
+		local main_spd_1 = speed:value(player)
+		if main_spd_1 <= main_spd_0 then
 			minetest.chat_send_player(p_name, "[BranchIsolation] FAIL: main speedup not effective.")
 		else
-			minetest.chat_send_player(p_name, "[BranchIsolation] PASS: main speed " .. init .. " -> " .. main_spd)
+			minetest.chat_send_player(p_name, "[BranchIsolation] PASS: main speed " .. main_spd_0 .. " -> " .. main_spd_1)
 		end
 	end)
 
-	minetest.after(4, function()
+	minetest.after(1.0, function()
 		speed:checkout_branch(player, "arena")
-		local arena2 = speed:value(player)
-		minetest.chat_send_player(p_name, "[BranchIsolation] re-check => " .. arena2)
+		local arena_spd_2 = speed:value(player)
+		minetest.chat_send_player(p_name, "[BranchIsolation] re-check => " .. arena_spd_2)
+		-- Revert to default
+		speed:checkout_branch(player, "main")
+		speed:del_change(player, id_speed_boost)
 	end)
 end
 
@@ -119,7 +123,7 @@ local function test_branch_concurrent(player)
 		minetest.chat_send_player(p_name, "[BranchConcurrent] PASS: arena from " .. init .. " -> " .. arena_spd)
 	end
 
-	minetest.after(2, function()
+	minetest.after(0.5, function()
 		local mining_branch = speed:checkout_branch(player, "mining")
 		if not mining_branch then
 			minetest.chat_send_player(p_name, "[BranchConcurrent] FAIL: 'mining' branch could not be created.")
@@ -148,7 +152,7 @@ local function test_branch_concurrent(player)
 		end
 	end)
 
-	minetest.after(4, function()
+	minetest.after(1.0, function()
 		local arena_b = speed:get_branch("arena")
 		if arena_b then
 			arena_b:reset(player)
@@ -160,10 +164,13 @@ local function test_branch_concurrent(player)
 		end
 	end)
 
-	minetest.after(6, function()
+	minetest.after(1.5, function()
 		speed:checkout_branch(player, "main")
 		local main_spd = speed:value(player)
 		minetest.chat_send_player(p_name, "[BranchConcurrent] final main => " .. main_spd)
+
+		-- Revert to default
+		speed:del_change(player, "main_speedup_concurrent")
 	end)
 end
 
@@ -185,7 +192,7 @@ local function test_onchange_listen_all(player)
 	speed:add_change(player, 1, "active_change")
 	speed:add_change(player, 0.5, "arena_slowdown", "arena")
 
-	minetest.after(2, function()
+	minetest.after(1, function()
 		speed.def.on_change = old_on_change
 		speed.def.listen_to_all_changes = false
 		if call_count == 0 then
@@ -225,7 +232,7 @@ local function test_onchange_listen_active(player)
 	speed:add_change(player, 1, "active_change")
 	speed:add_change(player, 0.5, "arena_slowdown", "arena")
 
-	minetest.after(2, function()
+	minetest.after(1, function()
 		speed.def.on_change = old_on_change
 		speed.def.listen_to_all_changes = false
 		if call_count == 0 then
@@ -327,7 +334,7 @@ local function test_branch_delete_check(player)
 		minetest.chat_send_player(p_name, "[BranchDelete] PASS: speed from " .. before_main .. " to " .. delete_spd)
 	end
 
-	minetest.after(2, function()
+	minetest.after(1, function()
 		del_branch:delete(player)
 		if speed.player_map[p_name].branches["delete_test"] then
 			minetest.chat_send_player(p_name, "[BranchDelete] FAIL: branch still exists.")
@@ -383,6 +390,9 @@ local function test_get_branches(player)
 	else
 		minetest.chat_send_player(p_name, "[GetBranches] FAIL: missing 'testA' or 'testB' in get_branches.")
 	end
+
+	-- Revert to default
+	speed:checkout_branch(player, "main")
 end
 
 --------------------------------------------------------------------------------
@@ -424,13 +434,15 @@ local function test_on_branch_create_delete(player)
 	if created_count == 0 then
 		minetest.chat_send_player(p_name, "[OnBranchCreateDelete] FAIL: on_branch_created not called.")
 	else
-		minetest.chat_send_player(p_name, "[OnBranchCreateDelete] PASS: on_branch_created called " .. created_count .. " time(s).")
+		minetest.chat_send_player(p_name, "[OnBranchCreateDelete] PASS: on_branch_created called " ..
+			created_count .. " time(s).")
 	end
 
 	if deleted_count == 0 then
 		minetest.chat_send_player(p_name, "[OnBranchCreateDelete] FAIL: on_branch_deleted not called.")
 	else
-		minetest.chat_send_player(p_name, "[OnBranchCreateDelete] PASS: on_branch_deleted called " .. deleted_count .. " time(s).")
+		minetest.chat_send_player(p_name, "[OnBranchCreateDelete] PASS: on_branch_deleted called " ..
+			deleted_count .. " time(s).")
 	end
 
 	speed.def.on_branch_created = old_on_branch_created
@@ -465,8 +477,12 @@ local function test_new_branch_method(player)
 	if after_checkout == init_speed then
 		minetest.chat_send_player(p_name, "[NewBranchMethod] FAIL: Speed not changed after activation.")
 	else
-		minetest.chat_send_player(p_name, "[NewBranchMethod] PASS: Speed changed from " .. init_speed .. " to " .. after_checkout)
+		minetest.chat_send_player(p_name, "[NewBranchMethod] PASS: Speed changed from " .. init_speed
+			.. " to " .. after_checkout)
 	end
+
+	-- Revert to default
+	speed:checkout_branch(player, "main")
 end
 
 --------------------------------------------------------------------------------
@@ -522,9 +538,11 @@ local function test_speed_and_jump_together(player)
 	local jump_changed = after_jump ~= init_jump
 
 	if speed_changed and jump_changed then
-		minetest.chat_send_player(p_name, "[SpeedJumpTogether] PASS: Speed changed " .. init_speed .. "->" .. after_speed .. ", Jump changed " .. init_jump .. "->" .. after_jump)
+		minetest.chat_send_player(p_name, "[SpeedJumpTogether] PASS: Speed changed " ..
+			init_speed .. "->" .. after_speed .. ", Jump changed " .. init_jump .. "->" .. after_jump)
 	else
-		minetest.chat_send_player(p_name, "[SpeedJumpTogether] FAIL: Speed changed=" .. tostring(speed_changed) .. ", Jump changed=" .. tostring(jump_changed))
+		minetest.chat_send_player(p_name, "[SpeedJumpTogether] FAIL: Speed changed=" ..
+			tostring(speed_changed) .. ", Jump changed=" .. tostring(jump_changed))
 	end
 
 	-- Remove only speed change, see if jump remains.
@@ -533,9 +551,11 @@ local function test_speed_and_jump_together(player)
 	local jp2 = jump:value(player)
 
 	if math.abs(sp2 - init_speed) < 0.0001 and math.abs(jp2 - after_jump) < 0.0001 then
-		minetest.chat_send_player(p_name, "[SpeedJumpTogether] PASS: Speed reverted to " .. init_speed .. ", jump remains " .. jp2)
+		minetest.chat_send_player(p_name, "[SpeedJumpTogether] PASS: Speed reverted to " ..
+			init_speed .. ", jump remains " .. jp2)
 	else
-		minetest.chat_send_player(p_name, "[SpeedJumpTogether] FAIL: partial revert mismatch. Speed=" .. sp2 .. ", jump=" .. jp2)
+		minetest.chat_send_player(p_name, "[SpeedJumpTogether] FAIL: partial revert mismatch. Speed=" ..
+			sp2 .. ", jump=" .. jp2)
 	end
 
 	-- Remove jump change, confirm both are back to init
@@ -546,7 +566,8 @@ local function test_speed_and_jump_together(player)
 	if math.abs(sp3 - init_speed) < 0.0001 and math.abs(jp3 - init_jump) < 0.0001 then
 		minetest.chat_send_player(p_name, "[SpeedJumpTogether] PASS: both speed/jump back to init.")
 	else
-		minetest.chat_send_player(p_name, "[SpeedJumpTogether] FAIL: final mismatch. Speed=" .. sp3 .. ", jump=" .. jp3)
+		minetest.chat_send_player(p_name, "[SpeedJumpTogether] FAIL: final mismatch. Speed=" ..
+			sp3 .. ", jump=" .. jp3)
 	end
 end
 
@@ -568,9 +589,11 @@ local function test_value_api(player)
 	local named_branch_val = speed:value(player, "value_api_test")
 
 	if math.abs(current_active_val - init_val) < 0.0001 and named_branch_val < init_val then
-		minetest.chat_send_player(p_name, "[ValueAPI] PASS: value(player) used 'main'; value(player,'value_api_test') reflected slowdown.")
+		minetest.chat_send_player(p_name, "[ValueAPI] PASS: value(player) used 'main'; " ..
+			"value(player,'value_api_test') reflected slowdown.")
 	else
-		minetest.chat_send_player(p_name, "[ValueAPI] FAIL: mismatch. active=" .. current_active_val .. ", named=" .. named_branch_val .. ", init=" .. init_val)
+		minetest.chat_send_player(p_name, "[ValueAPI] FAIL: mismatch. active=" .. current_active_val ..
+			", named=" .. named_branch_val .. ", init=" .. init_val)
 		return
 	end
 
@@ -578,10 +601,15 @@ local function test_value_api(player)
 	speed:checkout_branch(player, "value_api_test")
 	local active_switched_val = speed:value(player)
 	if math.abs(active_switched_val - named_branch_val) < 0.0001 then
-		minetest.chat_send_player(p_name, "[ValueAPI] PASS: after checkout, value(player) matches 'value_api_test' branch value.")
+		minetest.chat_send_player(p_name, "[ValueAPI] PASS: after checkout, " ..
+			"value(player) matches 'value_api_test' branch value.")
 	else
-		minetest.chat_send_player(p_name, "[ValueAPI] FAIL: after checkout mismatch. got=" .. active_switched_val .. " vs named=" .. named_branch_val)
+		minetest.chat_send_player(p_name, "[ValueAPI] FAIL: after checkout mismatch. got=" ..
+			active_switched_val .. " vs named=" .. named_branch_val)
 	end
+
+	-- Revert to default
+	speed:checkout_branch(player, "main")
 end
 
 --------------------------------------------------------------------------------
@@ -589,20 +617,20 @@ end
 --------------------------------------------------------------------------------
 
 local all_tests = {
-	{name = "AddRemove",            func = test_speed_add_remove,        delay = 2},
-	{name = "BranchIsolation",      func = test_branch_isolation,        delay = 2},
-	{name = "BranchConcurrent",     func = test_branch_concurrent,       delay = 4},
-	{name = "OnChangeAll",          func = test_onchange_listen_all,     delay = 2},
-	{name = "OnChangeActive",       func = test_onchange_listen_active,  delay = 2},
-	{name = "BranchNameCheck",      func = test_branch_name_check,       delay = 1},
-	{name = "ActiveBranchGet",      func = test_active_branch_check,     delay = 1},
-	{name = "BranchDelete",         func = test_branch_delete_check,     delay = 2},
-	{name = "GetBranches",          func = test_get_branches,            delay = 1},
-	{name = "OnBranchCreateDelete", func = test_on_branch_create_delete, delay = 2},
-	{name = "NewBranchMethod",      func = test_new_branch_method,       delay = 2},
-	{name = "MainBranchCantDelete", func = test_main_branch_cant_delete, delay = 1},
-	{name = "SpeedJumpTogether",    func = test_speed_and_jump_together, delay = 3},
-	{name = "ValueAPI",             func = test_value_api,               delay = 2},
+	{name = "AddRemove",            func = test_speed_add_remove,        delay = 1},
+	{name = "BranchIsolation",      func = test_branch_isolation,        delay = 1},
+	{name = "BranchConcurrent",     func = test_branch_concurrent,       delay = 2},
+	{name = "OnChangeAll",          func = test_onchange_listen_all,     delay = 1},
+	{name = "OnChangeActive",       func = test_onchange_listen_active,  delay = 1},
+	{name = "BranchNameCheck",      func = test_branch_name_check,       delay = 0},
+	{name = "ActiveBranchGet",      func = test_active_branch_check,     delay = 0},
+	{name = "BranchDelete",         func = test_branch_delete_check,     delay = 1},
+	{name = "GetBranches",          func = test_get_branches,            delay = 0},
+	{name = "OnBranchCreateDelete", func = test_on_branch_create_delete, delay = 0},
+	{name = "NewBranchMethod",      func = test_new_branch_method,       delay = 0},
+	{name = "MainBranchCantDelete", func = test_main_branch_cant_delete, delay = 0},
+	{name = "SpeedJumpTogether",    func = test_speed_and_jump_together, delay = 0},
+	{name = "ValueAPI",             func = test_value_api,               delay = 0},
 }
 
 local function run_tests_sequentially(player, index)
@@ -614,11 +642,32 @@ local function run_tests_sequentially(player, index)
 
 	local info = all_tests[index]
 	minetest.chat_send_player(p_name, "\n>>> " .. index .. "/" .. #all_tests .. " Running: " .. info.name .. "...")
+
+	local phys_before = player:get_physics_override()
 	info.func(player)
 
 	minetest.after(info.delay, function()
 		local again = minetest.get_player_by_name(p_name)
 		if not again then return end
+
+		-- Ensure that after running our test, the physics are back to original
+		-- Other mods might influence this. Hence, do run the tests in a barebone environment.
+		local phys_after = player:get_physics_override()
+		local is_equal
+		for k, v in pairs(phys_before) do
+			local new_v = phys_after[k]
+			if type(v) == "number" then
+				is_equal = (math.abs(new_v - v) < 0.001)
+			else
+				is_equal = (new_v == v)
+			end
+			if not is_equal then
+				core.chat_send_player(p_name, ("STOP! Internal test failure. field=%s. before=%s, after=%s")
+					:format(k, tostring(v), tostring(new_v)))
+				return
+			end
+		end
+
 		run_tests_sequentially(again, index + 1)
 	end)
 end
