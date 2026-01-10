@@ -424,12 +424,16 @@ local function test_on_branch_create_delete(player)
 	end
 
 	local del_branch = speed:checkout_branch(player, "my_del_branch")
+	local retval
 	if not del_branch then
 		minetest.chat_send_player(p_name, "[OnBranchCreateDelete] FAIL: couldn't create 'my_del_branch'.")
 	else
 		minetest.chat_send_player(p_name, "[OnBranchCreateDelete] Created 'my_del_branch'. Deleting...")
-		del_branch:delete(player)
+		retval = del_branch:delete(player)
+		minetest.chat_send_player(p_name, ((retval == true) and "PASS" or "FAIL") .. " - branch:delete(...) #1")
 	end
+	retval = del_branch:delete(player)
+	minetest.chat_send_player(p_name, ((retval == false) and "PASS" or "FAIL") .. " - branch:delete(...) #2")
 
 	if created_count == 0 then
 		minetest.chat_send_player(p_name, "[OnBranchCreateDelete] FAIL: on_branch_created not called.")
