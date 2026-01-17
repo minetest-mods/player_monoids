@@ -1,10 +1,10 @@
 # Player Monoids Library
 
-This is a small library for managing global player state in Luanti, ensuring that multiple mods can modify player attributes without conflicts. The README provides an overview of the mod's purpose and functionality. For a detailed breakdown of available functions and usage, refer to **API.md**.
+This is a small library for managing global player state in Luanti, ensuring that multiple mods can modify player attributes without conflicts. The README provides an overview of the mod's purpose and functionality. For a detailed breakdown of available functions and usage, refer to **[API.md](API.md)**.
 
 This mod introduces **monoids**, which represent specific aspects of player state, such as speed modifiers, jump height, or even custom attributes like corruption levels or reputation systems. Monoids allow multiple mods to apply effects in a structured manner, preventing unintended overrides.
 
-Additionally, the mod now includes **branches**, which allow different states to exist independently. This is useful for features like minigames, temporary effects, or alternate player states that should not interfere with the main game.
+Additionally, the mod includes **branches**, which allow different states to exist independently. This is useful for features like minigames, temporary effects, or alternate player states that should not interfere with the main game.
 
 ## Global Player State
 
@@ -14,7 +14,9 @@ For example, a player could be under a speed boost effect from a `playereffects`
 
 Player Monoids prevents this issue by allowing changes to be layered and combined correctly using monoids and branch-based state management.
 
-## Monoids
+## [Monoids](API.md)
+
+The functions documentation can be found in the **[API.md](API.md)** file.
 
 ### Creation
 
@@ -131,28 +133,6 @@ end
 
 This ensures that our boost calculation stays separate while still being compatible with other modifications. You could also introduce another nested monoid for handling slow effects, ensuring only the most significant reduction takes effect.&#x20;
 
-## Predefined monoids
-
-### Physics Overrides
-
-These monoids modify physics properties using multipliers:
-
-- `player_monoids.speed`
-- `player_monoids.jump`
-- `player_monoids.gravity`
-
-### Privileges
-
-These monoids toggle player privileges, using boolean logic:
-
-- `player_monoids.fly`
-- `player_monoids.noclip`
-
-### Other
-
-- `player_monoids.collisionbox` - Adjusts the player’s collision box with component-wise multiplication.
-- `player_monoids.visual_size` - Modifies the player’s visual size as a 2D multiplier vector.
-
 ## Caveats
 
 - If the global state managed by a monoid is modified by something other than the monoid, you will have the same problem as when two mods both independently try to modify global state without going through a monoid.
@@ -161,7 +141,3 @@ These monoids toggle player privileges, using boolean logic:
 - The order that different effects get combined together is based on key order, which may not be predictable. So you should try to make your monoids commutative in addition to associative, or at least not care if the order of two changes is swapped.
 - Mods should account for the fact that the active branch may change at any time - they should not assume that their effects will always be applied to the player.
 - If a mod wants to make sure to always be working with the main branch values, it should be doing that through the optional branch_name parameter in the monoid functions (such as `monoid:value(player, "main")`, and/or by implementing branch checks in `on_change()`).
-
----
-
-For more details, including function signatures and advanced usage, refer to **API.md**.
