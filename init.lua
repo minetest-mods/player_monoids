@@ -1,5 +1,9 @@
 local modpath = minetest.get_modpath(minetest.get_current_modname()) .. "/"
 
+local function copy_value(v)
+	return type(v) == "table" and table.copy(v) or v
+end
+
 player_monoids = {
 	api_version = 2
 }
@@ -97,7 +101,7 @@ function mon_meta:_get_branch_data(p_name, branch_name)
 	-- Create
 	branch = {
 		effects = {},
-		value = table.copy(self.def.identity)
+		value = copy_value(self.def.identity)
 	}
 	branches[branch_name] = branch
 
@@ -187,7 +191,7 @@ function mon_meta:reset_branch(player, branch_name)
 
 	-- Clear effects and recalc
 	bdata.effects = {}
-	local new_total = table.copy(self.identity)
+	local new_total = copy_value(self.identity)
 	bdata.value = new_total
 
 	local active_branch = p_data.active_branch or "main"
@@ -297,7 +301,7 @@ function mon_meta:value(player, branch_name)
 
 	branch_name = branch_name or p_data.active_branch
 	local bdata = p_data.branches[branch_name]
-	return bdata and bdata.value or table.copy(self.def.identity)
+	return bdata and bdata.value or copy_value(self.def.identity)
 end
 
 function mon_meta:checkout_branch(player, branch_name)
